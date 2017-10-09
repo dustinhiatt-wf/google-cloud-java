@@ -23,9 +23,11 @@ import com.google.api.client.util.Data;
 import com.google.api.services.bigquery.model.Table;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -64,6 +66,7 @@ public class TableInfo implements Serializable {
   private final Long expirationTime;
   private final Long lastModifiedTime;
   private final TableDefinition definition;
+  private final Map<String, String> labels;
 
   /**
    * A builder for {@code TableInfo} objects.
@@ -113,6 +116,8 @@ public class TableInfo implements Serializable {
      */
     public abstract Builder setDefinition(TableDefinition definition);
 
+    public abstract Builder setLabels(Map<String, String> labels);
+
     /**
      * Creates a {@code TableInfo} object.
      */
@@ -131,6 +136,7 @@ public class TableInfo implements Serializable {
     private Long expirationTime;
     private Long lastModifiedTime;
     private TableDefinition definition;
+    private Map<String, String> labels;
 
     BuilderImpl() {}
 
@@ -145,6 +151,9 @@ public class TableInfo implements Serializable {
       this.expirationTime = tableInfo.expirationTime;
       this.lastModifiedTime = tableInfo.lastModifiedTime;
       this.definition = tableInfo.definition;
+      this.labels = tableInfo.labels != null
+              ? ImmutableMap.copyOf(tableInfo.labels)
+              : null;
     }
 
     BuilderImpl(Table tablePb) {
@@ -160,6 +169,9 @@ public class TableInfo implements Serializable {
       this.generatedId = tablePb.getId();
       this.selfLink = tablePb.getSelfLink();
       this.definition = TableDefinition.fromPb(tablePb);
+      this.labels = tablePb.getLabels() != null
+              ? ImmutableMap.copyOf(tablePb.getLabels())
+              : null;
     }
 
     @Override
@@ -228,6 +240,12 @@ public class TableInfo implements Serializable {
     }
 
     @Override
+    public Builder setLabels(Map<String, String> labels) {
+      this.labels = ImmutableMap.copyOf(labels);
+      return this;
+    }
+
+    @Override
     public TableInfo build() {
       return new TableInfo(this);
     }
@@ -244,6 +262,7 @@ public class TableInfo implements Serializable {
     this.expirationTime = builder.expirationTime;
     this.lastModifiedTime = builder.lastModifiedTime;
     this.definition = builder.definition;
+    this.labels = builder.labels;
   }
 
 
@@ -330,6 +349,15 @@ public class TableInfo implements Serializable {
   }
 
   /**
+   * Return a map for labels applied to the dataset.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/docs/labeling-datasets">Labeling Datasets</a>
+   */
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  /**
    * Returns a builder for the table object.
    */
   public Builder toBuilder() {
@@ -349,6 +377,7 @@ public class TableInfo implements Serializable {
         .add("creationTime", creationTime)
         .add("lastModifiedTime", lastModifiedTime)
         .add("definition", definition)
+        .add("labels", labels)
         .toString();
   }
 
@@ -403,6 +432,9 @@ public class TableInfo implements Serializable {
     tablePb.setFriendlyName(friendlyName);
     tablePb.setId(generatedId);
     tablePb.setSelfLink(selfLink);
+    if (labels != null) {
+      tablePb.setLabels(labels);
+    }
     return tablePb;
   }
 
